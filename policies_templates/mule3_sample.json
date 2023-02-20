@@ -1,0 +1,40 @@
+{
+	"policies": [
+		{
+			"policyTemplateId": "client-id-enforcement",
+			"configurationData": {
+				"credentialsOrigin": "customExpression",
+				"clientIdExpression": "#[message.inboundProperties['http.query.params']['client_id']]",
+				"clientSecretExpression": "#[message.inboundProperties['http.query.params']['client_secret']]"
+			},
+			"order": 1,
+			"pointcutData":[{"methodRegex":"GET","uriTemplateRegex":".*"}],
+      "groupId": "68ef9520-24e9-4cf2-b2f5-620025690913"
+		},
+    {
+        "order": 2,
+        "groupId": "68ef9520-24e9-4cf2-b2f5-620025690913",
+        "policyTemplateId": "ip-blacklist",
+        "configurationData": {
+            "ipExpression": "#[message.inboundProperties['X-Forwarded-For']]",
+            "ips": [
+                "192.168.0.1/16"
+            ]
+        }
+    },
+    {
+
+        "order": 3,
+        "groupId": "68ef9520-24e9-4cf2-b2f5-620025690913",
+        "policyTemplateId": "header-injection",
+         "configurationData": {
+             "outboundHeaders": [
+                        {
+                        "key": "Cache-Control",
+                        "value": "no-store"
+                        }
+                    ]
+        }
+    }
+	]
+}

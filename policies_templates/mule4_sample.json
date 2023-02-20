@@ -1,0 +1,50 @@
+{
+	"policies": [
+    {
+        "configurationData": {
+            "clientIdExpression": "#[attributes.headers['client_id']]",
+            "clientSecretExpression": "#[attributes.headers['client_secret']]",
+            "clusterizable": true,
+            "exposeHeaders": false
+        },
+        "order": 1,
+        "groupId": "68ef9520-24e9-4cf2-b2f5-620025690913",
+        "assetId": "rate-limiting-sla-based",
+        "assetVersion": "1.2.6"
+    },
+    {
+        "configurationData": {
+            "jwtOrigin": "httpBearerAuthenticationHeader",
+            "jwtExpression": "#[attributes.headers['jwt']]",
+            "signingMethod": "rsa",
+            "signingKeyLength": 256,
+            "jwtKeyOrigin": "jwks",
+            "jwksUrl": "https://login.microsoftonline.com/common/discovery/v2.0/keys",
+            "jwksServiceTimeToLive": 60,
+            "skipClientIdValidation": true,
+            "clientIdExpression": "#[vars.claimSet.client_id]",
+            "validateAudClaim": false,
+            "mandatoryAudClaim": false,
+            "supportedAudiences": "aud.example.com",
+            "mandatoryExpClaim": false,
+            "mandatoryNbfClaim": false,
+            "validateCustomClaim": true,
+            "textKey" : "testkey",
+            "mandatoryCustomClaims": [
+                {
+                    "key": "aud",
+                    "value": "#[(vars.claimSet.aud == 'https://test.com/customers/v1/api') or (vars.claimSet.aud == '1ea02064-748a-4d37-9062-c21337237362')]"
+                },
+                {
+                    "key": "iss",
+                    "value": "https://sts.windows.net/a3299bba-ade6-4965-b011-bada8d1d9558/"
+                }
+            ]
+        },
+        "order": 2,
+        "groupId": "68ef9520-24e9-4cf2-b2f5-620025690913",
+        "assetId": "jwt-validation",
+        "assetVersion": "1.1.3"
+    }
+  ]
+}

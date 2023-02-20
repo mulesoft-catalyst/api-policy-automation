@@ -1,0 +1,78 @@
+#!groovy
+import groovy.json.JsonSlurper
+pipeline {
+    agent any
+    environment {
+        WORKSPACE = pwd()
+        NEWMAN_APPLYPOLICY = "${env.JENKINS_HOME}" + "/postman/scripts/Apply_Policies.postman_collection.json"
+        PATH = "/usr/local/bin:$PATH"
+    }
+    parameters {
+        choice( name: 'ENVIRONMENT', choices: "SIT\nSandbox", description: 'Environment where Mule Application will be deployed' )
+        choice( name: 'ORGANISATION', choices: "Digital", description: 'Business Organisation' )
+        string( name: 'API_NAME', defaultValue: 'Test API', description: 'API name as set in Anypoint Exchange' )
+        string( name: 'API_VERSION', defaultValue: '1.0', description: 'API version' )
+        booleanParam( name: 'DELETE_POLICIES', defaultValue: false, description: 'Choose if policies defined in API Manager but not in the config file are to be removed')
+    }
+    stages{
+        stage('Prepare') {
+            steps {
+                echo "Preparing the pipeline.... $PATH"
+                script {
+                  def githubUrl = scm.userRemoteConfigs[0].url
+                  print "GitHub URL: " + githubUrl
+                  echo "Checking out from GitHub..."
+                }
+                echo "${env.WORKSPACE}"
+                echo "Jenkins home is ${env.JENKINS_HOME}"
+            }
+            post {
+                success {
+                    echo "Stage Prepare was successful"
+                }
+                unsuccessful {
+                    echo "...Some failure in stage Prepare. Be patient"
+                }
+            }
+        }
+      stage('Apply policies') {
+        steps {
+          script {
+            def clientIdVarName = "${params.ORGANISATION}".toLowerCase() +  "_" +  "${params.ENVIRONMENT}".toLowerCase() + "_" + "client_id"
+            def clientSecretVarName = "${params.ORGANISATION}".toLowerCase() +  "_" +  "${params.ENVIRONMENT}".toLowerCase() + "_" + "client_secret"
+            println "ClientID Var name is .... " + clientIdVarName + " .... " + clientSecretVarName
+
+            def policiesFile = readJSON file: "${env.WORKSPACE}//src//main//resources//policies//" +  "${params.ENVIRONMENT}".toLowerCase() + ".json"
+            withCredentials([string(credentialsId: "${clientIdVarName}", variable: 'ANYPOINT_CLIENT_ID'),
+                    string(credentialsId: "${clientSecretVarName}", variable: 'ANYPOINT_CLIENT_SECRET')]) {
+
+            // Encode base64 to handle special characters or the shell command line doesn't pass arguments correctly
+            def parsed_data = policiesFile.toString()
+            parsed_data = parsed_data.bytes.encodeBase64().toString()
+
+                  sh """ /usr/local/bin/newman run $NEWMAN_APPLYPOLICY \
+                          --env-var anypoint_clientid=${ANYPOINT_CLIENT_ID} \
+                          --env-var anypoint_clientsecret=${ANYPOINT_CLIENT_SECRET} \
+                          --env-var anypoint_organisation=${params.ORGANISATION} \
+                          --env-var environment_name=${params.ENVIRONMENT} \
+                          --env-var policy_file="${parsed_data}" \
+                          --env-var api_name=${params.API_NAME} \
+                          --env-var api_version=${params.API_VERSION} \
+                          --env-var delete_policies_config=${params.DELETE_POLICIES} \
+                          --disable-unicode \
+                          --reporters cli,json \
+                          --reporter-json-export apply-policies-output.json """
+              }
+          }
+        }
+        post {
+            success {
+                echo "Stage Apply Policies was successful"
+            }
+            failure {
+                echo "...Some failure in stage Apply Policies. Be patient"
+            }
+        }
+      }
+    }
+  }
