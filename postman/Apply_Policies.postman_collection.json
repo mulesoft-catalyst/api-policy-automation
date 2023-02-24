@@ -1,0 +1,854 @@
+{
+	"info": {
+		"_postman_id": "a9e90df6-bb16-445d-9a46-b4c07658a6c7",
+		"name": "Apply_Policies",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "d0bd0069-227b-47c2-9d60-a7f27c131722",
+						"exec": [
+							"pm.test(\"Set Access Token\", function() {",
+							"    console.log(\"======= Postman Collection version 1.2 - 14-Apr-22 =======\");",
+							"  var jsonData = pm.response.json();",
+							"  pm.environment.set(\"access_token\", jsonData.access_token);",
+							"    pm.response.to.have.status(200);",
+							"    if (pm.response.code != 200) postman.setNextRequest(null);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "client_id",
+							"value": "{{anypoint_clientid}}",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "{{anypoint_clientsecret}}",
+							"type": "text"
+						},
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "text"
+						},
+						{
+							"key": "response_type",
+							"value": "code",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "https://anypoint.mulesoft.com/accounts/api/v2/oauth2/token",
+					"protocol": "https",
+					"host": [
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"accounts",
+						"api",
+						"v2",
+						"oauth2",
+						"token"
+					],
+					"query": [
+						{
+							"key": "response_type",
+							"value": "code",
+							"disabled": true
+						}
+					]
+				},
+				"description": "Login to the platform"
+			},
+			"response": []
+		},
+		{
+			"name": "GetOrganisationId",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6dd355c5-053f-4b64-a363-85a36f42c585",
+						"exec": [
+							"pm.test(\"Set Organisation Id\", function() {",
+							"  var jsonData = pm.response.json();",
+							"  for (var i = 0; i < jsonData.user.memberOfOrganizations.length; i++)",
+							"  ",
+							"    // Set Digial business group ID",
+							"    if (jsonData.user.memberOfOrganizations[i].name == pm.environment.get(\"anypoint_organisation\")){",
+							"      pm.environment.set(\"organisation_id\", jsonData.user.memberOfOrganizations[i].id);",
+							"      console.log(\"Oragnisation Id: \" + pm.environment.get(\"organisation_id\"));",
+							"      break;",
+							"    }",
+							"    console.log(\"Response status: \" + pm.response.code);",
+							"    if (pm.response.code != 200) postman.setNextRequest(null);",
+							"    pm.response.to.have.status(200);",
+							"",
+							"});",
+							"",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://anypoint.mulesoft.com/accounts/api/me",
+					"protocol": "https",
+					"host": [
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"accounts",
+						"api",
+						"me"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetEnvironmentID",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "e994bbc3-637e-49e5-b87b-5af9c250fb84",
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"    if (pm.response.code != 200) postman.setNextRequest(null);",
+							"    console.log(\"Get-Environments completed successfully\");",
+							"});",
+							"pm.test(\"Set Environment Id\", function () {",
+							"     var jsonData = pm.response.json();",
+							"     for (var i = 0; i < jsonData.data.length; i++) {",
+							"          // Set Source Environment Id",
+							"          if (jsonData.data[i].name == pm.environment.get(\"environment_name\")) {",
+							"               pm.environment.set(\"environment_id\", jsonData.data[i].id);",
+							"               console.log(\"Environment Id: \" + pm.environment.get(\"environment_id\"));",
+							"          }",
+							"     }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://anypoint.mulesoft.com/accounts/api/organizations/{{organisation_id}}/environments",
+					"protocol": "https",
+					"host": [
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"accounts",
+						"api",
+						"organizations",
+						"{{organisation_id}}",
+						"environments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetAPIInfo",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "516bc63a-d438-4dc4-9eaf-158162f3a918",
+						"exec": [
+							"var asset = pm.environment.get(\"api_name\");",
+							"var policyFile = pm.environment.get(\"policy_file\");",
+							"pm.environment.set(\"api_name\", asset.toLowerCase());",
+							"console.log(\"API Name: \" + pm.environment.get(\"api_name\"));",
+							"console.log(\"Policy File is \"  + pm.environment.get(\"policy_file\"));",
+							"var wordArray = CryptoJS.enc.Base64.parse(policyFile);",
+							"var decPolicyFile = CryptoJS.enc.Utf8.stringify(wordArray);",
+							"console.log(\"Decoded policy File is \"  + decPolicyFile);",
+							"pm.environment.set(\"policy_file\", decPolicyFile);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "f9b8c1a9-6ce8-473e-b7b7-c4c02b2cbda5",
+						"exec": [
+							"pm.test(\"Get API Info\", function() {",
+							"  var jsonData = pm.response.json();",
+							"  //pm.expect(jsonData.assets.length).to.be.above(0);",
+							"  if (pm.response.code != 200 || (jsonData.assets.length <=0 )) {",
+							"      postman.setNextRequest(null);",
+							"      console.log(\"API \" + pm.environment.get(\"api_name\") + \" with version \" + pm.environment.get(\"api_version\") + \" not found\");",
+							"      throw new Error(\"API not found\");",
+							"  }",
+							"",
+							"  for (var i = 0; i < jsonData.assets.length; i++) {",
+							"      if (jsonData.assets[i].apis[i].id !== null) {",
+							"          pm.environment.set(\"api_id\", jsonData.assets[i].apis[i].id);",
+							"          console.log(\"Api Id: \" + pm.environment.get(\"api_id\"));",
+							"          break;",
+							"      }     ",
+							"  }",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://anypoint.mulesoft.com/apimanager/api/v1/organizations/{{organisation_id}}/environments/{{environment_id}}/apis?assetId={{api_name}}&productVersion={{api_version}}",
+					"protocol": "https",
+					"host": [
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"apimanager",
+						"api",
+						"v1",
+						"organizations",
+						"{{organisation_id}}",
+						"environments",
+						"{{environment_id}}",
+						"apis"
+					],
+					"query": [
+						{
+							"key": "assetId",
+							"value": "{{api_name}}"
+						},
+						{
+							"key": "productVersion",
+							"value": "{{api_version}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Check Mule 3 or Mule 4",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "ee278d98-40e6-4a30-9fce-539dd81d4872",
+						"exec": [
+							"",
+							"pm.test(\"Check Mule 3 or Mule 4\", function() {",
+							"    var apiResponse = pm.response.json();",
+							"    if (pm.response.code != 200) postman.setNextRequest(null);",
+							"    pm.response.to.have.status(200);",
+							"    var mule3API = apiResponse.endpoint.muleVersion4OrAbove;",
+							"    if (mule3API == null || mule3API == false) {   ",
+							"        mule3API = true;",
+							"    }",
+							"    else ",
+							"        mule3API = false;",
+							"    pm.environment.set(\"mule3API\", mule3API);",
+							"    console.log(\"Mule 3 API is .. \" + mule3API);",
+							"    pm.environment.set(\"policy_count\", 0);",
+							"    pm.environment.set(\"policy_index\", 0);",
+							"",
+							"    // Set the Policy environment variables",
+							"    var policyFileData = pm.environment.get(\"policy_file\");",
+							"    if (policyFileData != undefined && policyFileData != null) {",
+							"        // policy data passed has \" escaped and so need to replace /\" with \"",
+							"        policyFileData = policyFileData.replace(/\\\\\\\"/g,\"\\\"\");",
+							"        policyFileData = JSON.parse(policyFileData);",
+							"        pm.environment.set(\"policy_file\", JSON.stringify(policyFileData));",
+							"        console.log(\"Policy file data is \" +  pm.environment.get(\"policy_file\"));",
+							"        var policyCount = policyFileData.policies.length;",
+							"        pm.environment.set(\"policy_count\", policyCount);",
+							"        console.log(\"Policy count is \" + pm.environment.get(\"policy_count\"));",
+							"    }",
+							"    if (pm.environment.get(\"policy_index\") >= pm.environment.get(\"policy_count\")) {",
+							"        console.log(\"No policies defined!\");",
+							"        postman.setNextRequest(null);",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://anypoint.mulesoft.com/apimanager/api/v1/organizations/{{organisation_id}}/environments/{{environment_id}}/apis/{{api_id}}",
+					"protocol": "https",
+					"host": [
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"apimanager",
+						"api",
+						"v1",
+						"organizations",
+						"{{organisation_id}}",
+						"environments",
+						"{{environment_id}}",
+						"apis",
+						"{{api_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get_Policies",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6bf018fa-2e1b-417e-bc06-e84f3185ffaf",
+						"exec": [
+							"pm.test(\"Get Policies\", function() {",
+							"    if (pm.response.code != 200) postman.setNextRequest(null);",
+							"    var policiesResponse = pm.response.json();",
+							"",
+							"    var mule3API = pm.environment.get(\"mule3API\");",
+							"    var policyFile = JSON.parse(pm.environment.get(\"policy_file\"));",
+							"    var policyIndex = pm.environment.get('policy_index');",
+							"    console.log(\"policy index is \" + policyIndex);",
+							"    var currentPolicy = policyFile.policies[policyIndex];",
+							"    pm.environment.set(\"policy_data\", JSON.stringify(currentPolicy));",
+							"    var newIndex = policyIndex + 1;",
+							"    pm.environment.set(\"policy_index\", newIndex);",
+							"    var policyName = currentPolicy.assetId;",
+							"    if (mule3API) {",
+							"        policyName = currentPolicy.policyTemplateId;",
+							"    }",
+							"    var apiMgrPolicyName = \"\";",
+							"    console.log(\"Policy name in config is \" + policyName);",
+							"    var nextRequest = \"Post Policy\";",
+							"",
+							"    for (var i = 0; i < policiesResponse.length; i++) {",
+							"      var policyId = policiesResponse[i].id;",
+							"      if (mule3API) {",
+							"          apiMgrPolicyName = policiesResponse[i].policyTemplateId;",
+							"      }",
+							"      else {",
+							"          apiMgrPolicyName = policiesResponse[i].assetId;",
+							"      }",
+							"      console.log(\"API Mgr Policy Name: \" + apiMgrPolicyName);",
+							"",
+							"      if (apiMgrPolicyName == policyName) {",
+							"            nextRequest = \"Patch Policy\";",
+							"            console.log(\"policy id \" + policyId);",
+							"            pm.environment.set(\"policy_id\",policyId);",
+							"            var data = currentPolicy;",
+							"            if (data != undefined && data != null) {",
+							"                if (mule3API == true) {",
+							"                    data.id = policyId;",
+							"                }",
+							"                pm.environment.set(\"policy_data\", JSON.stringify(data));",
+							"            }",
+							"            break;",
+							"      }",
+							"    }",
+							"    console.log(\"Next request is \" + nextRequest);",
+							"    postman.setNextRequest(nextRequest);",
+							"    pm.response.to.have.status(200);",
+							"",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"url": {
+					"raw": "https://anypoint.mulesoft.com/apimanager/api/v1/organizations/{{organisation_id}}/environments/{{environment_id}}/apis/{{api_id}}/policies?fullInfo=false",
+					"protocol": "https",
+					"host": [
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"apimanager",
+						"api",
+						"v1",
+						"organizations",
+						"{{organisation_id}}",
+						"environments",
+						"{{environment_id}}",
+						"apis",
+						"{{api_id}}",
+						"policies"
+					],
+					"query": [
+						{
+							"key": "fullInfo",
+							"value": "false"
+						}
+					]
+				},
+				"description": "Get list of all policies appiled for an API"
+			},
+			"response": []
+		},
+		{
+			"name": "Patch Policy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "fd73aba1-f367-4f07-928c-35b3b087cafe",
+						"exec": [
+							"pm.test(\"Patch Policy\", function() {",
+							"    var configDeletePolicy = pm.environment.get(\"delete_policies_config\");",
+							"    console.log('Config delete policy is ' + configDeletePolicy);",
+							"    pm.response.to.have.status(200);",
+							"    if (pm.response.code != 200) {",
+							"        console.log(\"Error while invoking Patch Policy\");",
+							"        postman.setNextRequest(null);",
+							"    }",
+							"    else if (pm.environment.get(\"policy_index\") >= pm.environment.get(\"policy_count\")) {",
+							"        if (configDeletePolicy == \"true\") {",
+							"            console.log(\"Patch Policy: All policies done. So setting next request to Delete Policies\");",
+							"            postman.setNextRequest(\"Delete Policies\");",
+							"        }",
+							"        else {",
+							"            console.log(\"Patch Policy: All policies done. So setting next request to null\");",
+							"            postman.setNextRequest(null);",
+							"        }",
+							"    }",
+							"    else {",
+							"        postman.setNextRequest(\"Get_Policies\");",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{{policy_data}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://anypoint.mulesoft.com/apimanager/api/v1/organizations/{{organisation_id}}/environments/{{environment_id}}/apis/{{api_id}}/policies/{{policy_id}}",
+					"protocol": "https",
+					"host": [
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"apimanager",
+						"api",
+						"v1",
+						"organizations",
+						"{{organisation_id}}",
+						"environments",
+						"{{environment_id}}",
+						"apis",
+						"{{api_id}}",
+						"policies",
+						"{{policy_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Post Policy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "9940ba66-ad0c-467a-8655-ccea90eec70d",
+						"exec": [
+							"pm.test(\"Post Policy\", function() {",
+							"    var configDeletePolicy = pm.environment.get(\"delete_policies_config\");",
+							"    console.log('Config delete policy is ' + configDeletePolicy);",
+							"    pm.response.to.have.status(201);",
+							"    if (pm.response.code != 201) {",
+							"        console.log(\"Error while invoking Post Policy\");",
+							"        postman.setNextRequest(null);",
+							"    }",
+							"    else if (pm.environment.get(\"policy_index\") >= pm.environment.get(\"policy_count\")) {",
+							"        if (configDeletePolicy == \"true\") {",
+							"            console.log(\"Post Policy: All policies done. So setting next request to Delete Policies\");",
+							"            postman.setNextRequest(\"Delete Policies\");",
+							"        }",
+							"        else {",
+							"            console.log(\"Post Policy: All policies done. So setting next request to null\");",
+							"            postman.setNextRequest(null);",
+							"        }",
+							"    }",
+							"    else {",
+							"        postman.setNextRequest(\"Get_Policies\");",
+							"    }",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "ad58f641-af9a-43c3-a896-24134b18eb0a",
+						"exec": [
+							"var policyData = pm.environment.get(\"policy_data\")",
+							"console.log(\"Policy data is \" + policyData);"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{{policy_data}}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://anypoint.mulesoft.com/apimanager/api/v1/organizations/{{organisation_id}}/environments/{{environment_id}}/apis/{{api_id}}/policies/",
+					"protocol": "https",
+					"host": [
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"apimanager",
+						"api",
+						"v1",
+						"organizations",
+						"{{organisation_id}}",
+						"environments",
+						"{{environment_id}}",
+						"apis",
+						"{{api_id}}",
+						"policies",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Policies",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "741182d1-ff53-45eb-9c17-0491654e4f83",
+						"exec": [
+							"pm.test(\"Delete Policies\", function() {",
+							"    if (pm.response.code != 200) postman.setNextRequest(null);",
+							"    var policiesResponse = pm.response.json();",
+							"",
+							"    var mule3API = pm.environment.get(\"mule3API\");",
+							"    var policyFile = JSON.parse(pm.environment.get(\"policy_file\"));",
+							"",
+							"    var apiMgrPolicyName = \"\";",
+							"",
+							"    var deletePolicies = [];",
+							"    for (var j = 0; j < policiesResponse.length; j++) {",
+							"        deletePolicies.push(policiesResponse[j].id);",
+							"    }",
+							"    console.log('Delete Policies IDs is ' + JSON.stringify(deletePolicies));",
+							"",
+							"    for (var i = 0; i < policiesResponse.length; i++) {",
+							"        var apiMgrPolicyName = policiesResponse[i].assetId;     ",
+							"        var policyId = policiesResponse[i].id;",
+							"        if (mule3API) {",
+							"            apiMgrPolicyName = policiesResponse[i].policyTemplateId;",
+							"        }",
+							"        console.log(\"API Mgr Policy Name: \" + apiMgrPolicyName);",
+							"        for (var j = 0; j < policyFile.policies.length;j++) {",
+							"            var policyInConfig = policyFile.policies[j];",
+							"            var policyNameInConfigFile = policyInConfig.assetId;",
+							"            if (mule3API) {",
+							"                policyNameInConfigFile = policyInConfig.policyTemplateId;",
+							"            }",
+							"            if (apiMgrPolicyName == policyNameInConfigFile) {",
+							"                for (var k=0;k<deletePolicies.length;k++) {",
+							"                    if (policyId == deletePolicies[k]) {",
+							"                        console.log('Removing policy id - ' + deletePolicies[k]);",
+							"                        deletePolicies.splice(k, 1);",
+							"                        break;",
+							"                    }",
+							"                }",
+							"                break;",
+							"            }",
+							"        }",
+							"    }",
+							"    if (deletePolicies.length > 0) {",
+							"        pm.environment.set(\"delete_policies\", deletePolicies);",
+							"        pm.environment.set(\"delete_policy_index\", 0);",
+							"        pm.environment.set(\"policy_id\", deletePolicies[0]);",
+							"        postman.setNextRequest(\"Delete Policy\");",
+							"    }",
+							"    else {",
+							"        postman.setNextRequest(null);",
+							"        console.log(\"No policies to be deleted!\");",
+							"    }",
+							"    pm.response.to.have.status(200);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"url": {
+					"raw": "https://anypoint.mulesoft.com/apimanager/api/v1/organizations/{{organisation_id}}/environments/{{environment_id}}/apis/{{api_id}}/policies?fullInfo=false",
+					"protocol": "https",
+					"host": [
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"apimanager",
+						"api",
+						"v1",
+						"organizations",
+						"{{organisation_id}}",
+						"environments",
+						"{{environment_id}}",
+						"apis",
+						"{{api_id}}",
+						"policies"
+					],
+					"query": [
+						{
+							"key": "fullInfo",
+							"value": "false"
+						}
+					]
+				},
+				"description": "Get list of all policies appiled for an API"
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Policy",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "6f8e2cda-9f03-4ab4-9b9c-f12805e1e583",
+						"exec": [
+							"pm.test(\"Delete Policy\", function() {",
+							"    if (pm.response.code != 204) postman.setNextRequest(null);",
+							"    var deletePolicyIndex = pm.environment.get(\"delete_policy_index\") + 1;",
+							"    var deletePolicies = pm.environment.get(\"delete_policies\");",
+							"    if (deletePolicyIndex >= deletePolicies.length) {",
+							"        postman.setNextRequest(null);",
+							"        console.log(\"No more policies to be deleted!\");",
+							"    }",
+							"    else {",
+							"        pm.environment.set(\"delete_policy_index\", deletePolicyIndex);",
+							"        pm.environment.set(\"policy_id\", deletePolicies[deletePolicyIndex]);",
+							"        postman.setNextRequest(\"Delete Policy\");",
+							"    }",
+							"    pm.response.to.have.status(204);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{access_token}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "https://anypoint.mulesoft.com/apimanager/api/v1/organizations/{{organisation_id}}/environments/{{environment_id}}/apis/{{api_id}}/policies/{{policy_id}}",
+					"protocol": "https",
+					"host": [
+						"anypoint",
+						"mulesoft",
+						"com"
+					],
+					"path": [
+						"apimanager",
+						"api",
+						"v1",
+						"organizations",
+						"{{organisation_id}}",
+						"environments",
+						"{{environment_id}}",
+						"apis",
+						"{{api_id}}",
+						"policies",
+						"{{policy_id}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
